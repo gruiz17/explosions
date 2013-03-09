@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>EXPLOSIONS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Super ridiculous visuals.">
+    <meta name="author" content="">
+    <script type="text/javascript" src="js/d3.v3.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> 
+    <script type="text/javascript" src="/static/js/jquery.jplayer.min.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+    body {
+  background: #000000;
+}
+
+circle {
+  fill: none;
+  stroke-width: 5px;
+}
+
+rect {
+  fill:none;
+  stroke-width:10px;
+}
+
+svg:text {
+  color: #ffffff;
+}
+
+.greenchange:hover {
+  color:#74c476;
+}
+
+.purplechange:hover {
+  color:#9e9ac8;
+}
+
+.bluechange:hover {
+  color:#8ACFF6;
+}
+
+.greenshit {
+  font-weight:200;
+  font-size:20px;
+}
+
+.purpleshit{
+  font-weight:200;
+  font-size:20px;
+}
+
+.swagshit {
+  font-weight:200;
+  font-size:20px;
+}
+</style>
+  </head>
+  <body>
+    <div class="row">
+        <div class="span12">
+          <span style="color: #00FFFF; font-family: Lato; font-weight:200">Explosions. </span>
+          <span style="color: #ffffff; font-family: Lato; font-weight:200">|  Mousemove Explosion: </span><select id="moves" onchange="allTheIfs()">
+            <option value="noPunct">Circles In</option>
+            <option value="period">Circles Out</option>
+            <option value="hexagon">Hexagon</option>
+            <option value="exclamation">Fireworks</option>
+            <option value="question">Mini Fireworks</option>
+            <option value="yoloswag">#yoloswag</option>
+            <option value="spanExc">Lines to Mouse</option>
+            <option value="spanQuest">Four Square</option>
+            <option value="spanQuest">Confetti</option>
+            <option value="spanQuest">Jazz</option>
+            <option value="spanQuest">Drawing</option>
+            <option value="spanQuest">Big Lines</option>
+            <option value="triangles">Triangles</option>
+          </select>
+
+          <span style="color: #ffffff; font-family: Lato; font-weight:200">Click Explosion: </span><select id="clicky" onchange="allTheIfs2()">
+
+            <option value="noPunct">Circles In</option>
+            <option value="period">Circles Out</option>
+            <option value="hexagon">Hexagon</option>
+            <option value="exclamation">Fireworks</option>
+            <option value="question">Mini Fireworks</option>
+            <option value="yoloswag">#yoloswag</option>
+            <option value="spanExc">Lines to Mouse</option>
+            <option value="spanQuest">Four Square</option>
+            <option value="spanQuest">Confetti</option>
+            <option value="spanQuest">Jazz</option>
+            <option value="spanQuest">Drawing</option>
+            <option value="spanQuest">Big Lines</option>
+            <option value="triangles">Triangles</option>
+            <option value="implosion">Implosion</option>
+          </select>
+         
+        </div>
+    </div>
+    <div class="row">
+        <div class="span12">
+    <script type="text/javascript" src="js/explosions.js"></script>
+</div>
+</div>
+  </body>
+</html>
