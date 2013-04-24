@@ -75,7 +75,8 @@ svg:text {
     <div class="row">
         <div class="span12">
           <span style="color: #00FFFF; font-family: Lato; font-weight:200">Explosions. </span>
-          <span style="color: #ffffff; font-family: Lato; font-weight:200">|  Mousemove Explosion: </span><select id="moves" onchange="allTheIfs()">
+          <span style="color: #ffffff; font-family: Lato; font-weight:200">|  Mousemove Explosion: </span>
+          <select id="mousemoveSelector">
             <option value="noPunct">Circles In</option>
             <option value="period">Circles Out</option>
             <option value="hexagon">Hexagon</option>
@@ -91,8 +92,8 @@ svg:text {
             <option value="triangles">Triangles</option>
           </select>
 
-          <span style="color: #ffffff; font-family: Lato; font-weight:200">Click Explosion: </span><select id="clicky" onchange="allTheIfs2()">
-
+          <span style="color: #ffffff; font-family: Lato; font-weight:200">Click Explosion: </span>
+          <select id="mousedownSelector">
             <option value="noPunct">Circles In</option>
             <option value="period">Circles Out</option>
             <option value="hexagon">Hexagon</option>
