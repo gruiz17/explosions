@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <script type="text/javascript" src="js/d3.v3.js"></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> 
-    <script type="text/javascript" src="/static/js/jquery.jplayer.min.js"></script>
+    <!--<script type="text/javascript" src="/static/js/jquery.jplayer.min.js"></script>-->
     <script type="text/javascript">
 
     var _gaq = _gaq || [];
@@ -69,6 +69,26 @@ svg:text {
   font-weight:200;
   font-size:20px;
 }
+
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+.span12 {
+  opacity: 0;
+}
+.span12:hover {
+  opacity: 1;
+}
 </style>
   </head>
   <body>
@@ -77,35 +97,35 @@ svg:text {
           <span style="color: #00FFFF; font-family: Lato; font-weight:200">Explosions. </span>
           <span style="color: #ffffff; font-family: Lato; font-weight:200">|  Mousemove Explosion: </span>
           <select id="mousemoveSelector">
-            <option value="noPunct">Circles In</option>
-            <option value="period">Circles Out</option>
+            <option value="circlereverse">Circles In</option>
+            <option value="basiccircle">Circles Out</option>
             <option value="hexagon">Hexagon</option>
-            <option value="exclamation">Fireworks</option>
-            <option value="question">Mini Fireworks</option>
+            <option value="fireworks">Fireworks</option>
+            <option value="miniworks">Mini Fireworks</option>
             <option value="yoloswag">#yoloswag</option>
-            <option value="spanExc">Lines to Mouse</option>
-            <option value="spanQuest">Four Square</option>
-            <option value="spanQuest">Confetti</option>
-            <option value="spanQuest">Jazz</option>
-            <option value="spanQuest">Drawing</option>
-            <option value="spanQuest">Big Lines</option>
+            <option value="linestomouse">Lines to Mouse</option>
+            <option value="foursquare">Four Square</option>
+            <option value="confetti">Confetti</option>
+            <option value="jazz">Jazz</option>
+            <option value="drawing">Drawing</option>
+            <option value="biglines">Big Lines</option>
             <option value="triangles">Triangles</option>
           </select>
 
           <span style="color: #ffffff; font-family: Lato; font-weight:200">Click Explosion: </span>
           <select id="mousedownSelector">
-            <option value="noPunct">Circles In</option>
-            <option value="period">Circles Out</option>
+            <option value="circlereverse">Circles In</option>
+            <option value="basiccircle">Circles Out</option>
             <option value="hexagon">Hexagon</option>
-            <option value="exclamation">Fireworks</option>
-            <option value="question">Mini Fireworks</option>
+            <option value="fireworks">Fireworks</option>
+            <option value="miniworks">Mini Fireworks</option>
             <option value="yoloswag">#yoloswag</option>
-            <option value="spanExc">Lines to Mouse</option>
-            <option value="spanQuest">Four Square</option>
-            <option value="spanQuest">Confetti</option>
-            <option value="spanQuest">Jazz</option>
-            <option value="spanQuest">Drawing</option>
-            <option value="spanQuest">Big Lines</option>
+            <option value="linestomouse">Lines to Mouse</option>
+            <option value="foursquare">Four Square</option>
+            <option value="confetti">Confetti</option>
+            <option value="jazz">Jazz</option>
+            <option value="drawing">Drawing</option>
+            <option value="biglines">Big Lines</option>
             <option value="triangles">Triangles</option>
           </select>
          <span style="color: #ffffff; font-family: Lato; font-weight:200"> | </span><a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
@@ -113,6 +133,7 @@ svg:text {
     </div>
     <div class="row">
         <div class="span12">
+    <script type="text/javascript" src="js/visuals.js"></script>
     <script type="text/javascript" src="js/explosions.js"></script>
 </div>
 </div>
