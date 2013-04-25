@@ -1,20 +1,12 @@
-//the main concert function.
-var z = d3.scale.category20b(),
-	onOff = 0,
-	i=0,
-	j=1,
-	refreshInterval=[];
-
-var w=window.innerWidth,
-	h=window.innerHeight;
-
-// var svg = d3.select("body").append("svg:svg").attr("width",w).attr("height",h).style("pointer-events", "all");
-var svg = d3.select("body").append("svg:svg").style("pointer-events", "all");
+var svg = d3.select("body").append("svg:svg")
+	.style("pointer-events", "all");
+var colors = d3.scale.category20b();
+var ci=0;
 
 function coordinateMapper(visual) {
 	return function() {
-		// console.log(visual);
-		return visual(d3.mouse(this));
+		var m = d3.mouse(svg[0][0]);
+		return visual(m[0], m[1], window.innerWidth, window.innerHeight);
 	};
 }
 
@@ -30,8 +22,8 @@ function setEventHandlerFromMenuOption(element, eventName) {
 }
 
 $(document).ready(function() {
-	setEventHandler('yoloswag', 'mousemove');
-	setEventHandler('yoloswag', 'mousedown');
+	setEventHandler('linestomouse', 'mousemove');
+	setEventHandler('circlereverse', 'mousedown');
     $("#mousemoveSelector").change(function() {
         setEventHandlerFromMenuOption(this, 'mousemove');
     });

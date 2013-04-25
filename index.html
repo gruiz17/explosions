@@ -25,7 +25,7 @@
     
     <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
     <style type="text/css">
-    body {
+body {
   background: #000000;
 }
 
@@ -77,25 +77,33 @@ svg {
   left: 0;
   right: 0;
   bottom: 0;
+  height: 100%;
+  width: 100%;
   z-index: -1;
   -webkit-user-select: none;
   -moz-user-select: none;
   -o-user-select: none;
   user-select: none;
 }
-.span12 {
+
+.header {
   opacity: 0;
+  font-family: Lato;font-weight:200;
+  transition:        opacity 0.2s linear;
+  -webkit-transition: opacity 0.2s linear;
+  -moz-transition:    opacity 0.2s linear;
+  -o-transition:      opacity 0.2s linear;
 }
-.span12:hover {
+.header:hover {
   opacity: 1;
 }
 </style>
   </head>
   <body>
     <div class="row">
-        <div class="span12">
-          <span style="color: #00FFFF; font-family: Lato; font-weight:200">Explosions. </span>
-          <span style="color: #ffffff; font-family: Lato; font-weight:200">|  Mousemove Explosion: </span>
+        <div class="header">
+          <span style="color: #00FFFF;">Explosions. </span>
+          <span style="color: #ffffff;">|  Mousemove Explosion: </span>
           <select id="mousemoveSelector">
             <option value="circlereverse">Circles In</option>
             <option value="basiccircle">Circles Out</option>
@@ -112,7 +120,7 @@ svg {
             <option value="triangles">Triangles</option>
           </select>
 
-          <span style="color: #ffffff; font-family: Lato; font-weight:200">Click Explosion: </span>
+          <span style="color: #ffffff;">Click Explosion: </span>
           <select id="mousedownSelector">
             <option value="circlereverse">Circles In</option>
             <option value="basiccircle">Circles Out</option>
@@ -128,14 +136,10 @@ svg {
             <option value="biglines">Big Lines</option>
             <option value="triangles">Triangles</option>
           </select>
-         <span style="color: #ffffff; font-family: Lato; font-weight:200"> | </span><a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
+         <span style="color: #ffffff;"> | </span><a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
         </div>
     </div>
-    <div class="row">
-        <div class="span12">
     <script type="text/javascript" src="js/visuals.js"></script>
     <script type="text/javascript" src="js/explosions.js"></script>
-</div>
-</div>
   </body>
 </html>
