@@ -17,7 +17,7 @@ visuals = {
 			.attr("cx",mx)
 			.attr("cy",my)
 			.attr("r", 10)
-			.style("stroke",colors(++ci)).style("fill", colors(++ci))
+			.style("stroke",colors(++ci)).style("fill", colors(++ci)).style("stroke-opacity",0.6).style("fill-opacity",0.4)
 			.transition().duration(500).ease(Math.sqrt).attr("cx",mx + 200).attr("cy", my + 200)
 			.transition().duration(500).ease(Math.sqrt).attr("cx",mx - 200)
 			.transition().duration(500).ease(Math.sqrt).attr("cx",mx - 200).attr("cy", my - 200)

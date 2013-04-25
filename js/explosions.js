@@ -1,5 +1,4 @@
-var svg = d3.select("body").append("svg:svg")
-	.style("pointer-events", "all");
+var svg = d3.select("body").append("svg:svg").style("pointer-events", "all");
 var colors = d3.scale.category20b();
 var ci=0;
 
@@ -22,8 +21,8 @@ function setEventHandlerFromMenuOption(element, eventName) {
 }
 
 $(document).ready(function() {
-	setEventHandler('linestomouse', 'mousemove');
-	setEventHandler('circlereverse', 'mousedown');
+	setEventHandler('miniworks', 'mousemove');
+	setEventHandler('hexagon', 'mousedown');
     $("#mousemoveSelector").change(function() {
         setEventHandlerFromMenuOption(this, 'mousemove');
     });
