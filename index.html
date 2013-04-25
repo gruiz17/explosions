@@ -87,14 +87,25 @@ svg {
 }
 
 .header {
+  display: block;
+  float: left;
+}
+.controls {
+  display: block;
+  float: right;
+}
+.header > *, .controls > * {
+  display: inline-block;
+}
+.header, .controls {
   opacity: 0;
-  font-family: Lato;font-weight:200;
+  font-family: Lato; font-weight:200; color: white;
   transition:        opacity 0.2s linear;
   -webkit-transition: opacity 0.2s linear;
   -moz-transition:    opacity 0.2s linear;
   -o-transition:      opacity 0.2s linear;
 }
-.header:hover {
+.header:hover, .controls:hover {
   opacity: 1;
 }
 </style>
@@ -102,8 +113,8 @@ svg {
   <body>
     <div class="row">
         <div class="header">
-          <span style="color: #00FFFF;">Explosions. </span>
-          <span style="color: #ffffff;">|  Mousemove Explosion: </span>
+          <span style="color: #00FFFF;">Explosions.</span> 
+          <span>Mousemove:
           <select id="mousemoveSelector">
             <option value="circlereverse">Circles In</option>
             <option value="basiccircle">Circles Out</option>
@@ -119,8 +130,9 @@ svg {
             <option value="biglines">Big Lines</option>
             <option value="triangles">Triangles</option>
           </select>
+          </span>
 
-          <span style="color: #ffffff;">Click Explosion: </span>
+          <span>Click:
           <select id="mousedownSelector">
             <option value="circlereverse">Circles In</option>
             <option value="basiccircle">Circles Out</option>
@@ -136,7 +148,18 @@ svg {
             <option value="biglines">Big Lines</option>
             <option value="triangles">Triangles</option>
           </select>
-         <span style="color: #ffffff;"> | </span><a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
+          </span>
+          <a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="controls">
+          <button accesskey="r" onclick="recorder.start();">Record</button>
+          <button accesskey="t" onclick="recorder.stop();">Stop</button>
+          <button accesskey="y" onclick="recorder.reset();">Reset</button>
+          <button accesskey="z" onclick="player.start();">Play</button>
+          <button accesskey="x" onclick="player.stop();">Stop</button>
+          <button accesskey="c" onclick="player.reset();">Reset</button>
         </div>
     </div>
     <script type="text/javascript" src="js/visuals.js"></script>
