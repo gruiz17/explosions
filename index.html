@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <script type="text/javascript" src="js/d3.v3.js"></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> 
-    <script type="text/javascript" src="/static/js/jquery.jplayer.min.js"></script>
+    <!--<script type="text/javascript" src="/static/js/jquery.jplayer.min.js"></script>-->
     <script type="text/javascript">
 
     var _gaq = _gaq || [];
@@ -24,8 +24,8 @@
     </script>
     
     <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
-    <style type="text/css">
-    body {
+<style type="text/css">
+body {
   background: #000000;
 }
 
@@ -69,51 +69,127 @@ svg:text {
   font-weight:200;
   font-size:20px;
 }
+
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.header {
+  display: block;
+  float: left;
+  z-index: 1;
+}
+.controls {
+  display: block;
+  float: right;
+  z-index: 3;
+}
+.header > *, .controls > * {
+  display: inline-block;
+}
+.header, .controls {
+  position: relative;
+  opacity: 0.3;
+  font-family: Lato; font-weight:200; color: white;
+  transition:        opacity 0.2s linear;
+  -webkit-transition: opacity 0.2s linear;
+  -moz-transition:    opacity 0.2s linear;
+  -o-transition:      opacity 0.2s linear;
+}
+body.nocontrols .header, body.nocontrols .controls {
+  opacity: 0;
+}
+.header:hover, .controls:hover {
+  opacity: 1 !important;
+}
+#exported {
+  z-index: 2;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  left: 0;
+  top: 0;
+  resize: none;
+  outline: none;
+  font-family: monospace;
+  font-size: 9px;
+}
 </style>
   </head>
   <body>
+    <textarea style="display:none;" id="exported"></textarea>
     <div class="row">
-        <div class="span12">
-          <span style="color: #00FFFF; font-family: Lato; font-weight:200">Explosions. </span>
-          <span style="color: #ffffff; font-family: Lato; font-weight:200">|  Mousemove Explosion: </span><select id="moves" onchange="allTheIfs()">
-            <option value="noPunct">Circles In</option>
-            <option value="period">Circles Out</option>
-            <option value="hexagon">Hexagon</option>
-            <option value="exclamation">Fireworks</option>
-            <option value="question">Mini Fireworks</option>
-            <option value="yoloswag">#yoloswag</option>
-            <option value="spanExc">Lines to Mouse</option>
-            <option value="spanQuest">Four Square</option>
-            <option value="spanQuest">Confetti</option>
-            <option value="spanQuest">Jazz</option>
-            <option value="spanQuest">Drawing</option>
-            <option value="spanQuest">Big Lines</option>
-            <option value="triangles">Triangles</option>
+        <div class="header">
+          <span style="color: #00FFFF;">Explosions.</span> 
+          <span>Mousemove:
+          <select id="mousemoveSelector">
+            <option id="mousemove-yoloswag"       value="yoloswag"      >` #yoloswag</option>
+            <option id="mousemove-circlereverse"  value="circlereverse" >1 Circles In</option>
+            <option id="mousemove-basiccircle"    value="basiccircle"   >2 Circles Out</option>
+            <option id="mousemove-triangles"      value="triangles"     >3 Triangles</option>
+            <option id="mousemove-hexagon"        value="hexagon"       >4 Hexagon</option>
+            <option id="mousemove-fireworks"      value="fireworks"     >5 Fireworks</option>
+            <option id="mousemove-miniworks"      value="miniworks" selected>6 Mini Fireworks</option>
+            <option id="mousemove-foursquare"     value="foursquare"    >7 Four Square</option>
+            <option id="mousemove-jazz"           value="jazz"          >8 Jazz</option>
+            <option id="mousemove-confetti"       value="confetti"      >9 Confetti</option>
+            <option id="mousemove-linestomouse"   value="linestomouse"  >0 Lines to Mouse</option>
+            <option id="mousemove-biglines"       value="biglines"      >- Big Lines</option>
+            <option id="mousemove-drawing"        value="drawing"       >= Drawing</option>
           </select>
+          </span>
 
-          <span style="color: #ffffff; font-family: Lato; font-weight:200">Click Explosion: </span><select id="clicky" onchange="allTheIfs2()">
-
-            <option value="noPunct">Circles In</option>
-            <option value="period">Circles Out</option>
-            <option value="hexagon">Hexagon</option>
-            <option value="exclamation">Fireworks</option>
-            <option value="question">Mini Fireworks</option>
-            <option value="yoloswag">#yoloswag</option>
-            <option value="spanExc">Lines to Mouse</option>
-            <option value="spanQuest">Four Square</option>
-            <option value="spanQuest">Confetti</option>
-            <option value="spanQuest">Jazz</option>
-            <option value="spanQuest">Drawing</option>
-            <option value="spanQuest">Big Lines</option>
-            <option value="triangles">Triangles</option>
+          <span>Click:
+          <select id="mousedownSelector">
+            <option id="mousedown-yoloswag"       value="yoloswag"      >` #yoloswag</option>
+            <option id="mousedown-circlereverse"  value="circlereverse" >1 Circles In</option>
+            <option id="mousedown-basiccircle"    value="basiccircle"   >2 Circles Out</option>
+            <option id="mousedown-triangles"      value="triangles"     >3 Triangles</option>
+            <option id="mousedown-hexagon"        value="hexagon" selected>4 Hexagon</option>
+            <option id="mousedown-fireworks"      value="fireworks"     >5 Fireworks</option>
+            <option id="mousedown-miniworks"      value="miniworks"     >6 Mini Fireworks</option>
+            <option id="mousedown-foursquare"     value="foursquare"    >7 Four Square</option>
+            <option id="mousedown-jazz"           value="jazz"          >8 Jazz</option>
+            <option id="mousedown-confetti"       value="confetti"      >9 Confetti</option>
+            <option id="mousedown-linestomouse"   value="linestomouse"  >0 Lines to Mouse</option>
+            <option id="mousedown-biglines"       value="biglines"      >- Big Lines</option>
+            <option id="mousedown-drawing"        value="drawing"       >= Drawing</option>
           </select>
-         <span style="color: #ffffff; font-family: Lato; font-weight:200"> | </span><a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
+          </span>
+          <a style="color: #00FFFF; font-family: Lato; font-weight:200" href="https://github.com/gruiz17/explosions">Source Code</a>
         </div>
     </div>
     <div class="row">
-        <div class="span12">
+        <div class="controls">
+          <button class="button-record" id="button-record-start">Record</button>
+          <button class="button-record" id="button-record-stop">Stop</button>
+          <button class="button-record" id="button-record-reset">Reset</button>
+          <input  class="button-record" value="1" size="1" style="text-align: center;" id="input-play-timescale" />
+          <button class="button-record" id="button-play-start">Play</button>
+          <button class="button-record" id="button-play-stop">Stop</button>
+          <button class="button-record" id="button-play-reset">Reset</button>
+          <button style="display:none;" class="button-export" id="button-play-import" onclick="importFromTextarea();">Import</button>
+          <button style="display:none;" class="button-export" id="button-play-export" onclick="exportToTextarea();">Export</button>
+          <button class="button-record" id="button-controls" onclick="$('body').toggleClass('nocontrols');">Controls</button>
+          <button id="button-export-exporter" onclick="toggleExporter();">Import/Export</button>
+        </div>
+    </div>
+    <div id="svgContainer"></div>
+    <!--<script type="text/javascript" src="js/string.js"></script>-->
+    <script type="text/javascript" src="js/visuals.js"></script>
     <script type="text/javascript" src="js/explosions.js"></script>
-</div>
-</div>
   </body>
 </html>

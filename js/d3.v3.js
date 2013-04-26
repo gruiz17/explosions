@@ -1,4 +1,4 @@
-d3 = function() {
+﻿d3 = function() {
   var π = Math.PI, ε = 1e-6, d3 = {
     version: "3.0.6"
   }, d3_radians = π / 180, d3_degrees = 180 / π, d3_document = document, d3_window = window;
