@@ -1,4 +1,4 @@
-var svg = d3.select("body").append("svg:svg").style("pointer-events", "all");
+var svg = d3.select("#svgContainer").append("svg:svg").style("pointer-events", "all");
 var colors = d3.scale.category20b();
 var ci=0;
 var debug = false;
@@ -108,25 +108,6 @@ function Player(entryHandler, entries) {
 	};
 }
 
-var recorderButtonSelectors = ['#button-record-start', '#button-record-stop', '#button-record-reset'];
-var playerButtonSelectors = ['#button-play-start', '#button-play-stop', '#button-play-reset'];
-function setButtonState(buttonSelectors, enableState) {
-	return function() {
-		for (var i = 0; i < buttonSelectors.length; i++) {
-			if (enableState[i]===true) {$(buttonSelectors[i]).removeAttr('disabled');}
-			else if (enableState[i]===false) {$(buttonSelectors[i]).attr('disabled', '');}
-		}
-	};
-}
-
-
-$('#button-record-start').click(function() {recorder.start();});
-$('#button-record-stop').click(function() {recorder.stop();});
-$('#button-record-reset').click(function() {recorder.reset();});
-$('#button-play-start').click(function() {player.start();});
-$('#button-play-stop').click(function() {player.stop();});
-$('#button-play-reset').click(function() {player.reset();});
-
 
 stringConverter = {};
 
@@ -172,18 +153,29 @@ function recordHandler(entry) {
 }
 
 
+$('#button-record-start').click(function() {recorder.start();});
+$('#button-record-stop').click(function() {recorder.stop();});
+$('#button-record-reset').click(function() {recorder.reset();});
+$('#button-play-start').click(function() {player.start();});
+$('#button-play-stop').click(function() {player.stop();});
+$('#button-play-reset').click(function() {player.reset();});
+var recorderButtonSelectors = ['#button-record-start', '#button-record-stop', '#button-record-reset'];
+var playerButtonSelectors = ['#button-play-start', '#button-play-stop', '#button-play-reset'];
+function setButtonState(buttonSelectors, enableState) {
+	for (var i = 0; i < buttonSelectors.length; i++) {
+		if (enableState[i]===true) {$(buttonSelectors[i]).removeAttr('disabled');}
+		else if (enableState[i]===false) {$(buttonSelectors[i]).attr('disabled', '');}
+	}
+}
 recorder = new Recorder();
-recorder.bind('start', setButtonState(recorderButtonSelectors, [false, true, true]));
-recorder.bind('stop', function() {
-	// exportToHash();
-	setButtonState(recorderButtonSelectors, [true, false, true])();
-});
-recorder.bind('reset', setButtonState(recorderButtonSelectors, [true, false, false]));
+recorder.bind('start', function() {setButtonState(recorderButtonSelectors, [false, true, true]);} );
+recorder.bind('stop', function() {setButtonState(recorderButtonSelectors, [true, false, true]);} );
+recorder.bind('reset', function() {setButtonState(recorderButtonSelectors, [true, false, false]);} );
 recorder.reset();
 player = new Player(recordHandler, recorder.entries);
-player.bind('start', setButtonState(playerButtonSelectors, [false, true, true]));
-player.bind('stop', setButtonState(playerButtonSelectors, [true, false, true]));
-player.bind('reset', setButtonState(playerButtonSelectors, [true, false, false]));
+player.bind('start', function() {$('body').addClass('playing'); setButtonState(playerButtonSelectors, [false, true, true]);} );
+player.bind('stop',  function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, true]);} );
+player.bind('reset', function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, false]);} );
 player.reset();
 
 
@@ -202,6 +194,62 @@ function setEventHandlerFromMenuOption(element, eventName) {
 	var visualName = element.value;
 	setEventHandler(visualName, eventName);
 }
+
+keyAliases = {
+
+	"`": "#mousemove-yoloswag",
+	"1": "#mousemove-circlereverse",
+	"2": "#mousemove-basiccircle",
+	"3": "#mousemove-triangles",
+	"4": "#mousemove-hexagon",
+	"5": "#mousemove-fireworks",
+	"6": "#mousemove-miniworks",
+	"7": "#mousemove-foursquare",
+	"8": "#mousemove-jazz",
+	"9": "#mousemove-confetti",
+	"0": "#mousemove-linestomouse",
+	"-": "#mousemove-biglines",
+	"=": "#mousemove-drawing",
+
+	"~": "#mousedown-yoloswag",
+	"!": "#mousedown-circlereverse",
+	"@": "#mousedown-basiccircle",
+	"#": "#mousedown-triangles",
+	"$": "#mousedown-hexagon",
+	"%": "#mousedown-fireworks",
+	"^": "#mousedown-miniworks",
+	"&": "#mousedown-foursquare",
+	"*": "#mousedown-jazz",
+	"(": "#mousedown-confetti",
+	")": "#mousedown-linestomouse",
+	"_": "#mousedown-biglines",
+	"+": "#mousedown-drawing",
+
+	"[": "#button-record-start",
+	"]": "#button-record-stop",
+	"\\":"#button-record-reset",
+	" ": "#button-play-start",
+	"z": "#button-play-stop",
+	"x": "#button-play-reset",
+	"e": "#button-export-exporter",
+
+	"/": "#button-controls"
+};
+
+function keystrokes(event) {
+	if ($('#exported:focus, select:focus').length>0) {return;}
+	var k = event.charCode;
+	s = String.fromCharCode(k);
+	var $e = $(keyAliases[s]);
+	if ($e.is('option')) {
+		$e.parent().val($e.val());
+		$e.change();
+	}
+	else if ($e.attr('disabled')===undefined) {
+		$e.click();
+	}
+}
+$(document).keypress(keystrokes);
 
 $(document).ready(function() {
 	setEventHandler('miniworks', 'mousemove');
