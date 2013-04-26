@@ -1,1024 +1,270 @@
-//the main concert function.
-var w=window.innerWidth,
-    h=window.innerHeight,
-    z = d3.scale.category20b(),
-    onOff = 0,
-    i=0,
-    j=1,
+var svg = d3.select("#svgContainer").append("svg:svg").style("pointer-events", "all");
+var colors = d3.scale.category20b();
+var ci=0;
+var debug = false;
+function log(msg) {if (debug) {console.log(msg);}}
 
-    refreshInterval=[];
-
-
-var svg = d3.select("body").append("svg:svg")
-    .attr("width",w)
-    .attr("height",h)
-    .style("pointer-events", "all")
-    .on("mousemove", circleReverse)
-    .on("mousedown",circleReverse);
-
-//////////////////////////////////mousedown functions////////////
-function onClickYoloswag() {
-	svg.on("mousedown", yoloSwag)
-}
-function onClickTriangles() {
-	svg.on("mousedown", triangles)
-}
-
-function onClickHexagon() {
-	svg.on("mousedown", hexagon)
-}
-function onClickBiglines() {
-	svg.on("mousedown", biglines)
-}
-function onClickConfetti() {
-	svg.on("mousedown",confetti)
-}
-
-function onClickJazz() {
-	svg.on("mousedown",jazz)
-}
-
-function onClickDrawing() {
-	svg.on("mousedown",drawing)
-}
-
-function onClickFourSquare() {
-	svg.on("mousedown",fourSquare)
-}
-
-function onClickLinesToMouse() {
-	svg.on("mousedown",linesToMouse)
-}
-
-function onClickCircleReverse() {
-	svg.on("mousedown",circleReverse)
-}
-
-function onClickBasicCircle() {
-	svg.on("mousedown",basicCircle)
-}
-
-function onClickMiniworks() {
-	svg.on("mousedown",miniworks)
+function Recorder(head, entries) {
+	if (this == window) {throw('Can only be called to create new instance, i.e., with `new`.');}
+	this.entries = [];
+	this.callbacks = {};
+	this.bind = function(eventName, func) {this.callbacks[eventName] = func;};
+	this.setEntries = function(entries, head) {
+		this.entries.splice(0,this.entries.length);
+		if (entries) { for (var i = 0; i < entries.length; i++) {
+			this.entries.push(entries[i]);
+		} }
+		if (head !== undefined) {this.segmentStartHead = head;}
+		else {
+			if (entries && entries.length > 0) {this.segmentStartHead = entries[entries.length-1][0];}
+			else {this.segmentStartHead = 0;}
+		}
+	};
+	this.reset = function() {
+		this._stop();
+		this.setEntries();
+		var callback = this.callbacks['reset']; if (callback) {callback();}
+		log('recording reset.');
+	};
+	this.start = function() {
+		if (!this.segmentStartTime) {this.segmentStartTime = new Date();}
+		log('recording...');
+		var callback = this.callbacks['start']; if (callback) {callback();}
+	};
+	this.stop = function() {
+		this._stop();
+		log('recording stopped.');
+		var callback = this.callbacks['stop']; if (callback) {callback();}
+	};
+	this._stop = function() {
+		this.record(undefined);
+		this.segmentStartHead = this.getHead();
+		this.segmentStartTime = undefined;
+	};
+	this.getHead = function() {
+		return this.segmentStartHead + (new Date() - this.segmentStartTime);
+	};
+	this.record = function(entry) {
+		if (!this.segmentStartTime) {return;}
+		this.entries.push([this.getHead(), entry]);
+		var callback = this.callbacks['record']; if (callback) {callback();}
+	};
+	this.entriesToJSON = function() {
+		return JSON.stringify(this.entries);
+	};
+	this.entriesFromJSON = function(entriesJSON) {
+		return this.setEntries(JSON.parse(entriesJSON));
+	};
 }
 
-function onClickFireworks() {
-	svg.on("mousedown",fireworks)
+function Player(entryHandler, entries) {
+	var self = this;
+	if (this == window) {throw('Can only be called to create new instance, i.e., with `new`.');}
+	this.entries = entries || [];
+	this.entryHandler = entryHandler;
+	this.callbacks = {};
+	this.bind = function(eventName, func) {this.callbacks[eventName] = func;};
+	this.reset = function() {
+		this.stop();
+		this.segmentStartHead = 0;
+		this.index = -1;
+		log('playing reset.');
+		var callback = this.callbacks['reset']; if (callback) {callback();}
+	};
+	this.start = function(timeScale) {
+		if (!timeScale) {timeScale = 1;}
+		this.timeScale = timeScale;
+		if (this.timeout) {clearTimeout(this.timeout);}
+		if (!this.segmentStartTime) {this.segmentStartTime = new Date();}
+		log('playing...');
+		var callback = this.callbacks['start']; if (callback) {callback();}
+		this.play();
+	};
+	this.play = function(timeScale) {
+		// log(this.index);
+		if (this.index >= 0) {
+			var entry = this.entries[this.index][1];
+			if (entry !== undefined && entry !== null) {this.entryHandler(entry);}
+		}
+		this.index++;
+		if (this.index >= this.entries.length) {this.stop(); this.reset();}
+		else {
+			timeUntilHeadOfNextEntry = this.getTimeUntilHeadOfEntry(this.index);
+			// log(timeUntilHeadOfNextEntry);
+			this.timeout = setTimeout( function(){self.play(timeScale);}, timeUntilHeadOfNextEntry*this.timeScale );
+		}
+		var callback = this.callbacks['play']; if (callback) {callback();}
+	};
+	this.stop = function() {
+		clearTimeout(this.timeout);
+		this.segmentStartHead = this.getHead();
+		this.segmentStartTime = undefined;
+		log('playing stopped.');
+		var callback = this.callbacks['stop']; if (callback) {callback();}
+	};
+	this.getHead = function() {
+		return this.segmentStartHead + (new Date() - this.segmentStartTime)/this.timeScale;
+	};
+	this.getTimeUntilHeadOfEntry = function(index) {
+		return this.entries[index][0] - this.getHead();
+	};
 }
 
 
-function onClickConfetti() {
-	svg.on("mousedown",confetti)
-}
-////////////////////////////////clickityclicks together//////////
-function allTheIfs2(){
+stringConverter = {};
 
-if (document.getElementById("clicky").selectedIndex==0)
-{
-	onClickCircleReverse();
-}
-else if (document.getElementById("clicky").selectedIndex==1)
-{
-	onClickBasicCircle();
-}
-else if (document.getElementById("clicky").selectedIndex==2)
-{
-	onClickHexagon();
-}
-else if (document.getElementById("clicky").selectedIndex==3)
-{
-	onClickFireworks();
-}
-else if (document.getElementById("clicky").selectedIndex==4)
-{
-	onClickMiniworks();
-}
-else if (document.getElementById("clicky").selectedIndex==5)
-{
-	onClickYoloswag();
-}
-else if (document.getElementById("clicky").selectedIndex==6)
-{
-	onClickLinesToMouse();
-}
-else if (document.getElementById("clicky").selectedIndex==7)
-{
-	onClickFourSquare();
-}
-else if (document.getElementById("clicky").selectedIndex==8)
-{
-	onClickConfetti();
-}
-else if (document.getElementById("clicky").selectedIndex==9)
-{
-	onClickJazz();
-}
-else if (document.getElementById("clicky").selectedIndex==10)
-{
-	onClickDrawing();
-}
-else if (document.getElementById("clicky").selectedIndex==11)
-{
-	onClickBiglines();
-}
-else if (document.getElementById("clicky").selectedIndex==12)
-{
-	onClickTriangles();
-}
-}
-////////////////////////////////////onMouse motion functions/////
-function onMouseYoloswag() {
-	svg.on("mousemove", yoloSwag)
-}
-function onMouseTriangles() {
-	svg.on("mousemove", triangles)
+function toggleExporter() {
+	$('#exported, .button-export, .button-record').toggle();
 }
 
-function onMouseHexagon() {
-	svg.on("mousemove", hexagon)
+/*function exportToHash() {
+	stringConverter.JSON = recorder.entriesToJSON();
+	stringConverter.LZW = LZW.encode(stringConverter.JSON);
+	stringConverter.Base64 = Base64.encode(stringConverter.LZW);
+	location.hash = '#' + stringConverter.Base64;
 }
-function onMouseBiglines() {
-	svg.on("mousemove", biglines)
+function importFromHash () {
+	if (!location.hash.substring(1)) {return;}
+	stringConverter.Base64 = location.hash.substring(1);
+	stringConverter.LZW = Base64.decode(stringConverter.Base64);
+	stringConverter.JSON = LZW.decode(stringConverter.LZW);
+	recorder.entriesFromJSON(stringConverter.JSON);
+}*/
+
+function exportToTextarea() {
+	var data = recorder.entriesToJSON();
+	$('#exported').val(data);
 }
-function onMouseConfetti() {
-	svg.on("mousemove",confetti)
+function importFromTextarea () {
+	var data = $('#exported').val();
+	recorder.entriesFromJSON(data);
 }
 
-function onMouseJazz() {
-	svg.on("mousemove",jazz)
+function mouseHandler(visualName) {
+	return function() {
+		var m = d3.mouse(svg[0][0]);
+		var w = window.innerWidth, h = window.innerHeight;
+		var fmx = m[0]/w, fmy = m[1]/h;
+		if (window.recorder) {recorder.record([visualName, fmx, fmy]);}
+		return doVisual(visualName, fmx, fmy);
+	};
 }
 
-function onMouseDrawing() {
-	svg.on("mousemove",drawing)
+function getTimeScale() {
+	return parseFloat( $('#input-play-timescale').val() ) || 1;
+}
+function recordHandler(entry) {
+	return doVisual(entry[0], entry[1], entry[2], getTimeScale());
 }
 
-function onMouseFourSquare() {
-	svg.on("mousemove",fourSquare)
+
+$('#button-record-start').click(function() {recorder.start();});
+$('#button-record-stop').click(function() {recorder.stop();});
+$('#button-record-reset').click(function() {recorder.reset();});
+$('#button-play-start').click(function() {player.start(getTimeScale());});
+$('#button-play-stop').click(function() {player.stop();});
+$('#button-play-reset').click(function() {player.reset();});
+var recorderButtonSelectors = ['#button-record-start', '#button-record-stop', '#button-record-reset'];
+var playerButtonSelectors = ['#button-play-start', '#button-play-stop', '#button-play-reset'];
+function setButtonState(buttonSelectors, enableState) {
+	for (var i = 0; i < buttonSelectors.length; i++) {
+		if (enableState[i]===true) {$(buttonSelectors[i]).removeAttr('disabled');}
+		else if (enableState[i]===false) {$(buttonSelectors[i]).attr('disabled', '');}
+	}
+}
+recorder = new Recorder();
+recorder.bind('start', function() {$('body').addClass('recording'); setButtonState(recorderButtonSelectors, [false, true, true]);} );
+recorder.bind('stop' , function() {$('body').removeClass('recording'); setButtonState(recorderButtonSelectors, [true, false, true]);} );
+recorder.bind('reset', function() {$('body').removeClass('recording'); setButtonState(recorderButtonSelectors, [true, false, false]);} );
+recorder.reset();
+player = new Player(recordHandler, recorder.entries);
+player.bind('start', function() {$('body').addClass('playing'); setButtonState(playerButtonSelectors, [false, true, true]);} );
+player.bind('stop' , function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, true]);} );
+player.bind('reset', function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, false]);} );
+player.reset();
+
+
+function doVisual(visualName, fmx, fmy, timeScale) {
+	if (!timeScale) {timeScale=1;}
+	var w = window.innerWidth, h = window.innerHeight;
+	var visual = visuals[visualName];
+	return visual(w*fmx, h*fmy, w, h, timeScale);
 }
 
-function onMouseLinesToMouse() {
-	svg.on("mousemove",linesToMouse)
+function setEventHandler(visualName, eventName) {
+	// log(visualName, eventName);
+	svg.on(eventName, mouseHandler(visualName));
 }
 
-function onMouseCircleReverse() {
-	svg.on("mousemove",circleReverse)
+function setEventHandlerFromMenuOption(element, eventName) {
+	var visualName = element.value;
+	setEventHandler(visualName, eventName);
 }
 
-function onMouseBasicCircle() {
-	svg.on("mousemove",basicCircle)
-}
+keyAliases = {
 
-function onMouseMiniworks() {
-	svg.on("mousemove",miniworks)
-}
+	"`": "#mousemove-yoloswag",
+	"1": "#mousemove-circlereverse",
+	"2": "#mousemove-basiccircle",
+	"3": "#mousemove-triangles",
+	"4": "#mousemove-hexagon",
+	"5": "#mousemove-fireworks",
+	"6": "#mousemove-miniworks",
+	"7": "#mousemove-foursquare",
+	"8": "#mousemove-jazz",
+	"9": "#mousemove-confetti",
+	"0": "#mousemove-linestomouse",
+	"-": "#mousemove-biglines",
+	"=": "#mousemove-drawing",
 
-function onMouseFireworks() {
-	svg.on("mousemove",fireworks)
-}
+	"~": "#mousedown-yoloswag",
+	"!": "#mousedown-circlereverse",
+	"@": "#mousedown-basiccircle",
+	"#": "#mousedown-triangles",
+	"$": "#mousedown-hexagon",
+	"%": "#mousedown-fireworks",
+	"^": "#mousedown-miniworks",
+	"&": "#mousedown-foursquare",
+	"*": "#mousedown-jazz",
+	"(": "#mousedown-confetti",
+	")": "#mousedown-linestomouse",
+	"_": "#mousedown-biglines",
+	"+": "#mousedown-drawing",
 
-function onMouseConfetti() {
-	svg.on("mousemove",confetti)
-}
-//////////////////////////////binding the everything together////
-function allTheIfs(){
+	"[": "#button-record-start",
+	"]": "#button-record-stop",
+	"\\":"#button-record-reset",
+	" ": "#button-play-start",
+	"z": "#button-play-stop",
+	"x": "#button-play-reset",
+	"e": "#button-export-exporter",
 
-if (document.getElementById("moves").selectedIndex==0)
-{
-	onMouseCircleReverse();
-}
-else if (document.getElementById("moves").selectedIndex==1)
-{
-	onMouseBasicCircle();
-}
-else if (document.getElementById("moves").selectedIndex==2)
-{
-	onMouseHexagon();
-}
-else if (document.getElementById("moves").selectedIndex==3)
-{
-	onMouseFireworks();
-}
-else if (document.getElementById("moves").selectedIndex==4)
-{
-	onMouseMiniworks();
-}
-else if (document.getElementById("moves").selectedIndex==5)
-{
-	onMouseYoloswag();
-}
-else if (document.getElementById("moves").selectedIndex==6)
-{
-	onMouseLinesToMouse();
-}
-else if (document.getElementById("moves").selectedIndex==7)
-{
-	onMouseFourSquare();
-}
-else if (document.getElementById("moves").selectedIndex==8)
-{
-	onMouseConfetti();
-}
-else if (document.getElementById("moves").selectedIndex==9)
-{
-	onMouseJazz();
-}
-else if (document.getElementById("moves").selectedIndex==10)
-{
-	onMouseDrawing();
-}
-else if (document.getElementById("moves").selectedIndex==11)
-{
-	onMouseBiglines();
-}
-else if (document.getElementById("moves").selectedIndex==12)
-{
-	onMouseTriangles();
+	"/": "#button-controls"
 };
-}
-////////////////////////////////////onMouse motion functions/////
-function onMouseYoloswag() {
-	svg.on("mousemove", yoloSwag)
-}
-function onMouseTriangles() {
-	svg.on("mousemove", triangles)
-}
 
-function onMouseHexagon() {
-	svg.on("mousemove", hexagon)
-}
-function onMouseBiglines() {
-	svg.on("mousemove", biglines)
-}
-function onMouseConfetti() {
-	svg.on("mousemove",confetti)
-}
-
-function onMouseJazz() {
-	svg.on("mousemove",jazz)
-}
-
-function onMouseDrawing() {
-	svg.on("mousemove",drawing)
-}
-
-function onMouseFourSquare() {
-	svg.on("mousemove",fourSquare)
-}
-
-function onMouseLinesToMouse() {
-	svg.on("mousemove",linesToMouse)
-}
-
-function onMouseCircleReverse() {
-	svg.on("mousemove",circleReverse)
-}
-
-function onMouseBasicCircle() {
-	svg.on("mousemove",basicCircle)
-}
-
-function onMouseMiniworks() {
-	svg.on("mousemove",miniworks)
-}
-
-function onMouseFireworks() {
-	svg.on("mousemove",fireworks)
-}
-
-
-function onMouseConfetti() {
-	svg.on("mousemove",confetti)
-}
-///////////////////////////////////////////actual visualizations///////////
-function yoloSwag() {
-	var m = d3.mouse(this);
-
-	svg.append("svg:text")
-	.attr("font-size","16")
-	.attr("font-family","Lato")
-	.attr("fill","#ffffff")
-	.attr("x",m[0])
-	.attr("y",m[1])
-	.attr("fill-opacity",1)
-	.text("#yoloswag")
-	.transition()
-	.duration(500)
-	.ease(Math.sqrt)
-	.attr("font-size","28")
-	.attr("x", m[0]-50)
-	.attr("y",m[1]-50)
-	.attr("fill-opacity",.1)
-	.remove()
-}
-
-function hexagon() {
-	var m = d3.mouse(this);
-	var swag=[0,0,0,0,0,0]
-	var k;
-	var initRotate=0;
-	for (k=0; k < swag.length; k++)
-	{
-		var curmx = m[0],
-			curmy = m[1];
-
-
-		svg.append("svg:circle")
-		.attr("transform","rotate(" + initRotate + ", " + curmx + "," + curmy +")")
-		.attr("cx",curmx)
-		.attr("cy",curmy)
-		.attr("r", 10)
-		.style("stroke",z(++i))
-		.style("fill", z(++i))
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("cx",curmx + 200)
-			.attr("cy", curmy + 200)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("cx",curmx - 200)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("cx",curmx - 200)
-			.attr("cy",curmy - 200)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("cy",curmy - 200)
-			.attr("cx",curmx + 200)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("cx",curmx + 200)
-			.attr("cy", curmy + 200)
-
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("cx",curmy+200)
-			.attr("cy",curmy - 200)
-			.style("stroke-opacity",1e-6)
-			.style("fill-opacity", 1e-6)
-			.remove()
-
-
-		initRotate+=60;
+function keystrokes(event) {
+	if ($('textarea:focus, input:focus, select:focus').length>0) {return;}
+	var k = event.charCode;
+	s = String.fromCharCode(k);
+	var $e = $(keyAliases[s]);
+	if ($e.is('option')) {
+		$e.parent().val($e.val());
+		$e.change();
+	}
+	else if ($e.attr('disabled') === undefined) {
+		$e.click();
 	}
 }
+$(document).keypress(keystrokes);
 
-function triangles() {
-	var m = d3.mouse(this);
-	var swag = [0,0,0];
-	var k;
-
-	var curmx = m[0],
-		curmy = m[1];
-
-	var p1init = (curmx-20) + " " + (curmy)
-	var p2init = curmx + " " + (curmy-40)
-	var p3init = (curmx+20) + " " + (curmy)
-
-	var p1 = (curmx-50) + " " + (curmy-100)
-	var p2 = curmx + " " + (curmy-250)
-	var p3 = (curmx+50) + " " + (curmy-100)
-
-	for (k = 0; k < swag.length; k++)
-	{
-		svg.append("svg:path")
-		.attr("d", "M " + p1init + " L "+p2init + " L "+p3init + " L " + p1init)
-		.style("stroke", z(++i))
-		.style("stroke-opacity",1)
-		.style("stroke-width","5px")
-		.style("fill-opacity",0)
-		.transition()
-		.duration(500)
-		.ease(Math.sqrt)
-		.attr("d", "M " + p1 + " L "+p2 + " L "+p3 + " L " + p1)
-		.style("stroke-opacity",1e-6)
-		.remove();
-
-		svg.append("svg:path")
-		.attr("transform","rotate(125, " + curmx + "," + curmy +")")
-		.attr("d", "M " + p1init + " L "+p2init + " L "+p3init + " L " + p1init)
-		.style("stroke", z(++i))
-		.style("stroke-opacity",1)
-		.style("stroke-width","5px")
-		.style("fill-opacity",0)
-		.transition()
-		.duration(500)
-		.ease(Math.sqrt)
-		.attr("d", "M " + p1 + " L "+p2 + " L "+p3 + " L " + p1)
-		.style("stroke-opacity",1e-6)
-		.remove();
-
-		svg.append("svg:path")
-		.attr("transform","rotate(235, " + curmx + "," + curmy +")")
-		.attr("d", "M " + p1init + " L "+p2init + " L "+p3init + " L " + p1init)
-		.style("stroke", z(++i))
-		.style("stroke-opacity",1)
-		.style("stroke-width","5px")
-		.style("fill-opacity",0)
-		.transition()
-		.duration(500)
-		.ease(Math.sqrt)
-		.attr("d", "M " + p1 + " L "+p2 + " L "+p3 + " L " + p1)
-		.style("stroke-opacity",1e-6)
-		.remove();
-	}
-}
-function biglines() {
-	var m = d3.mouse(this);
-	var swag = [0,0,0,0,0]
-	var k;
-	for (k=0; k < swag.length; k++)
-	{
-		var curmx = m[0],
-			curmy = m[1],
-			randx = Math.floor(Math.random()*2000)-1000,
-			randy = Math.floor(Math.random()*2000)-1000;
-			thunnidx=300,
-			thunnidy=300;
-
-		if (randx < 0){
-			thunnidx *= -1;
-		}
-
-		if (randy < 0){
-			thunnidy*=-1;
-		}
-
-
-
-		svg.append("svg:line")
-		.attr("x1",m[0])
-		.attr("y1",m[1])
-		.attr("x2",m[0])
-		.attr("y2",m[1])
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.transition()
-			.duration(1000)
-			.ease(Math.sqrt)
-			.attr("x1",m[0]+randx)
-			.attr("y1",m[1]+randy)
-			.attr("x2",m[0]+randx+thunnidx)
-			.attr("y2",m[1]+randy+thunnidy)
-			.style("stroke-opacity",.1)
-			.remove();
-	}
-
-}
-function confetti() {
-	var m = d3.mouse(this);
-	var swag = [0,0,0,0,0]
-	var k;
-	for (k=0; k < swag.length; k++)
-	{
-		var curmx = m[0],
-			curmy = m[1],
-			randx = Math.floor(Math.random()*2000)-1000,
-			randy = Math.floor(Math.random()*2000)-1000;
-			thunnidx=30,
-			thunnidy=30;
-
-		if (randx < 0){
-			thunnidx *= -1;
-		}
-
-		if (randy < 0){
-			thunnidy*=-1;
-		}
-
-
-
-		svg.append("svg:line")
-		.attr("x1",m[0])
-		.attr("y1",m[1])
-		.attr("x2",m[0])
-		.attr("y2",m[1])
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.transition()
-			.duration(1000)
-			.ease(Math.sqrt)
-			.attr("x1",m[0]+randx)
-			.attr("y1",m[1]+randy)
-			.attr("x2",m[0]+randx+thunnidx)
-			.attr("y2",m[1]+randy+thunnidy)
-			.style("stroke-opacity",.1)
-			.remove();
-	}
-}
-
-function jazz() {
-	var m = d3.mouse(this);
-	var swag = [0,0,0,0,0]
-	var k;
-	for (k = 0; k < swag.length; k++)
-	{
-	var curmx = m[0],
-		curmy = m[1]
-	svg.append("svg:circle")
-		.attr("cx",curmx)
-		.attr("cy",curmy)
-		.attr("r",6)
-		.style("stroke",z(++i))
-		.style("fill",z(++i))
-		.transition()
-		.duration(800)
-		.ease(Math.sqrt)
-		.attr("cx",curmx+Math.floor(Math.random()*200)-100)
-		.attr("cy",curmy+Math.floor(Math.random()*200)-100)
-		.style("stroke-opacity",1e-6)
-		.style("fill-opacity",1e-6)
-		.remove();
-	}
-}
-
-function drawing() {
-	var m = d3.mouse(this);
-	var swag = [0,0,0,0,0,0,0]
-	var k;
-	for (k = 0; k < swag.length; k++)
-	{
-	var curmx = m[0],
-		curmy = m[1]
-	svg.append("svg:circle")
-		.attr("cx",curmx)
-		.attr("cy",curmy)
-		.attr("r",4)
-		.style("stroke","#00FFFF")
-		.style("fill","#00FFFF")
-		.transition()
-		.delay(2000)
-		.duration(800)
-		.attr("cx",curmx+Math.floor(Math.random()*200)-100)
-		.attr("cy",curmy+Math.floor(Math.random()*200)-100)
-		.style("stroke",z(++i))
-		.style("fill",z(++i))
-		.style("stroke-opacity",1e-6)
-		.style("fill-opacity",1e-6)
-		.remove();
-	}
-}
-
-function fourSquare() {
-	var m = d3.mouse(this);
-	//bottom right
-	svg.append("svg:rect")
-		.attr("x",m[0])
-		.attr("y",m[1])
-		.attr("width",0)
-		.attr("height",0)
-		.style("stroke",z(++i))
-		.style("stroke-opacity",1)
-		.transition()
-		.duration(500)
-
-		.ease(Math.sqrt)
-		.attr("x",m[0]+40)
-		.attr("y",m[1]+40)
-		.attr("width",100)
-		.attr("height",100)
-		.style("stroke-opacity",1e-6)
-		.remove();
-	//bottom left
-	svg.append("svg:rect")
-		.attr("transform","rotate(90, " + m[0] + "," + m[1] +")")
-		.attr("x",m[0])
-		.attr("y",m[1])
-		.attr("width",0)
-		.attr("height",0)
-		.style("stroke",z(++i))
-		.style("stroke-opacity",1)
-		.transition()
-		.duration(500)
-		.ease(Math.sqrt)
-		.attr("x",m[0]+40)
-		.attr("y",m[1]+40)
-		.attr("width",100)
-		.attr("height",100)
-		.style("stroke-opacity",1e-6)
-		.remove();
-	//top left
-	svg.append("svg:rect")
-		.attr("transform","rotate(180, " + m[0] + "," + m[1] +")")
-		.attr("x",m[0])
-		.attr("y",m[1])
-		.attr("width",0)
-		.attr("height",0)
-		.style("stroke",z(++i))
-		.style("stroke-opacity",1)
-		.transition()
-		.duration(500)
-		.ease(Math.sqrt)
-		.attr("x",m[0]+40)
-		.attr("y",m[1]+40)
-		.attr("width",100)
-		.attr("height",100)
-		.style("stroke-opacity",1e-6)
-		.remove();
-	//top right
-	svg.append("svg:rect")
-		.attr("transform","rotate(270, " + m[0] + "," + m[1] +")")
-		.attr("x",m[0])
-		.attr("y",m[1])
-		.attr("width",0)
-		.attr("height",0)
-		.style("stroke",z(++i))
-		.style("stroke-opacity",1)
-		.transition()
-		.duration(500)
-		.ease(Math.sqrt)
-		.attr("x",m[0]+40)
-		.attr("y",m[1]+40)
-		.attr("width",100)
-		.attr("height",100)
-		.style("stroke-opacity",1e-6)
-		.remove();
-}
-
-
-function linesToMouse() {
-	var m = d3.mouse(this);
-	//right
-	svg.append("svg:line")
-		.attr("x1",m[0]+w+30)
-		.attr("y1",m[1])
-		.attr("x2",m[0]+w+300)
-		.attr("y2",m[1])
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-	//bottom right
-	svg.append("svg:line")
-		.attr("x1",m[0]+w+30)
-		.attr("y1",m[1]+h+30)
-		.attr("x2",m[0]+w+300)
-		.attr("y2",m[1]+h+300)
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-	//bottom
-	svg.append("svg:line")
-		.attr("x1",m[0])
-		.attr("y1",m[1]+h)
-		.attr("x2",m[0])
-		.attr("y2",m[1]+h+300)
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-
-	//bottom left
-	svg.append("svg:line")
-		.attr("x1",m[0]-w-30)
-		.attr("y1",m[1]+h-30)
-		.attr("x2",m[0]-w-300)
-		.attr("y2",m[1]+h+300)
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-	//left
-	svg.append("svg:line")
-		.attr("x1",m[0]-w-30)
-		.attr("y1",m[1])
-		.attr("x2",m[0]-w-300)
-		.attr("y2",m[1])
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-	//top left
-	svg.append("svg:line")
-		.attr("x1",m[0]-w-30)
-		.attr("y1",m[1]-h-30)
-		.attr("x2",m[0]-w-300)
-		.attr("y2",m[1]-h-300)
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-	//top
-	svg.append("svg:line")
-		.attr("x1",m[0])
-		.attr("y1",m[1]-h)
-		.attr("x2",m[0])
-		.attr("y2",m[1]-h-300)
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",.1)
-			.remove();
-
-	//top right
-	svg.append("svg:line")
-		.attr("x1",m[0]+w+30)
-		.attr("y1",m[1]-h-30)
-		.attr("x2",m[0]+w+300)
-		.attr("y2",m[1]-h-300)
-		.style("stroke",z(++i))
-		.style("stroke-width", "10px")
-		.style("stroke-opacity",1)
-		.transition()
-			.duration(500)
-			.ease(Math.sqrt)
-			.attr("x1",m[0])
-			.attr("y1",m[1])
-			.attr("x2",m[0])
-			.attr("y2",m[1])
-			//.style("stroke-opacity",1e-6)
-			.remove();
-}
-
-function circleReverse() {
-	var m = d3.mouse(this);
-
-	svg.append("svg:circle")
-		.attr("cx",m[0])
-    	.attr("cy",m[1])
-    	.attr("r",w/2)
-    	.style("stroke",z(++i))
-    	.transition()
-    		.duration(500)
-    		.attr("r",0)
-    		.style("stroke-opacity",1e-6)
-    		.remove();
-}
-
-function basicCircle() {
-	var m = d3.mouse(this);
-
-	svg.append("svg:circle")
-		.attr("cx",m[0])
-    	.attr("cy",m[1])
-    	.attr("r",0)
-    	.style("stroke",z(++i))
-    	.transition()
-    		.duration(1000)
-    		.ease(Math.sqrt)
-    		.attr("r",w/2)
-    		.style("stroke-opacity",1e-6)
-    		.remove();
-}
-
-function miniworks() {
-  var m = d3.mouse(this);
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(155,155)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(-155,155)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(155,-155)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(-155,-155)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-}
-function fireworks() {
-
-  var m = d3.mouse(this);
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(0,-400)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(0,400)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(400,0)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(-400,0)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(355,355)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(-355,355)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(355,-355)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-
-  svg.append("svg:circle")
-    .attr("cx",m[0])
-    .attr("cy",m[1])
-    .attr("r",10)
-    .style("stroke",z(++i))
-    .style("fill",z(i))
-    .style("stroke-opacity",0.5)
-    .transition()
-      .attr("transform","translate(-355,-355)")
-      .duration(1000)
-      .ease(Math.sqrt)
-      .attr("r",25)
-      .style("stroke-opacity",1e-6)
-      .style("fill-opacity",1e-6)
-      .remove();
-}
-
+$(document).ready(function() {
+	setEventHandler('miniworks', 'mousemove');
+	setEventHandler('hexagon', 'mousedown');
+    $("#mousemoveSelector").change(function() {
+        setEventHandlerFromMenuOption(this, 'mousemove');
+    });
+    $("#mousedownSelector").change(function() {
+        setEventHandlerFromMenuOption(this, 'mousedown');
+    });
+    // importFromHash();
+});
