@@ -108,7 +108,7 @@ svg {
   -moz-transition:    opacity 0.2s linear;
   -o-transition:      opacity 0.2s linear;
 }
-body.playing .header, body.playing .controls {
+body.nocontrols .header, body.nocontrols .controls {
   opacity: 0;
 }
 .header:hover, .controls:hover {
@@ -174,16 +174,17 @@ body.playing .header, body.playing .controls {
     </div>
     <div class="row">
         <div class="controls">
-          <button accesskey="r" class="button-record" id="button-record-start">Record</button>
-          <button accesskey="t" class="button-record" id="button-record-stop">Stop</button>
-          <button accesskey="y" class="button-record" id="button-record-reset">Reset</button>
-          <button accesskey="z" class="button-record" id="button-play-start">Play</button>
-          <button accesskey="x" class="button-record" id="button-play-stop">Stop</button>
-          <button accesskey="c" class="button-record" id="button-play-reset">Reset</button>
+          <button class="button-record" id="button-record-start">Record</button>
+          <button class="button-record" id="button-record-stop">Stop</button>
+          <button class="button-record" id="button-record-reset">Reset</button>
+          <input  class="button-record" value="1" size="1" style="text-align: center;" id="input-play-timescale" />
+          <button class="button-record" id="button-play-start">Play</button>
+          <button class="button-record" id="button-play-stop">Stop</button>
+          <button class="button-record" id="button-play-reset">Reset</button>
           <button style="display:none;" class="button-export" id="button-play-import" onclick="importFromTextarea();">Import</button>
           <button style="display:none;" class="button-export" id="button-play-export" onclick="exportToTextarea();">Export</button>
-          <button accesskey="0" class="button-record" id="button-controls" onclick="$('body').toggleClass('playing');">Controls</button>
-          <button accesskey="0" id="button-export-exporter" onclick="toggleExporter();">Import/Export</button>
+          <button class="button-record" id="button-controls" onclick="$('body').toggleClass('nocontrols');">Controls</button>
+          <button id="button-export-exporter" onclick="toggleExporter();">Import/Export</button>
         </div>
     </div>
     <div id="svgContainer"></div>

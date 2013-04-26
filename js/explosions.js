@@ -71,14 +71,16 @@ function Player(entryHandler, entries) {
 		log('playing reset.');
 		var callback = this.callbacks['reset']; if (callback) {callback();}
 	};
-	this.start = function() {
+	this.start = function(timeScale) {
+		if (!timeScale) {timeScale = 1;}
+		this.timeScale = timeScale;
 		if (this.timeout) {clearTimeout(this.timeout);}
 		if (!this.segmentStartTime) {this.segmentStartTime = new Date();}
 		log('playing...');
 		var callback = this.callbacks['start']; if (callback) {callback();}
 		this.play();
 	};
-	this.play = function() {
+	this.play = function(timeScale) {
 		// log(this.index);
 		if (this.index >= 0) {
 			var entry = this.entries[this.index][1];
@@ -89,7 +91,7 @@ function Player(entryHandler, entries) {
 		else {
 			timeUntilHeadOfNextEntry = this.getTimeUntilHeadOfEntry(this.index);
 			// log(timeUntilHeadOfNextEntry);
-			this.timeout = setTimeout( function(){self.play();}, timeUntilHeadOfNextEntry );
+			this.timeout = setTimeout( function(){self.play(timeScale);}, timeUntilHeadOfNextEntry*this.timeScale );
 		}
 		var callback = this.callbacks['play']; if (callback) {callback();}
 	};
@@ -101,7 +103,7 @@ function Player(entryHandler, entries) {
 		var callback = this.callbacks['stop']; if (callback) {callback();}
 	};
 	this.getHead = function() {
-		return this.segmentStartHead + (new Date() - this.segmentStartTime);
+		return this.segmentStartHead + (new Date() - this.segmentStartTime)/this.timeScale;
 	};
 	this.getTimeUntilHeadOfEntry = function(index) {
 		return this.entries[index][0] - this.getHead();
@@ -148,15 +150,18 @@ function mouseHandler(visualName) {
 	};
 }
 
+function getTimeScale() {
+	return parseFloat( $('#input-play-timescale').val() ) || 1;
+}
 function recordHandler(entry) {
-	return doVisual(entry[0], entry[1], entry[2]);
+	return doVisual(entry[0], entry[1], entry[2], getTimeScale());
 }
 
 
 $('#button-record-start').click(function() {recorder.start();});
 $('#button-record-stop').click(function() {recorder.stop();});
 $('#button-record-reset').click(function() {recorder.reset();});
-$('#button-play-start').click(function() {player.start();});
+$('#button-play-start').click(function() {player.start(getTimeScale());});
 $('#button-play-stop').click(function() {player.stop();});
 $('#button-play-reset').click(function() {player.reset();});
 var recorderButtonSelectors = ['#button-record-start', '#button-record-stop', '#button-record-reset'];
@@ -168,21 +173,22 @@ function setButtonState(buttonSelectors, enableState) {
 	}
 }
 recorder = new Recorder();
-recorder.bind('start', function() {setButtonState(recorderButtonSelectors, [false, true, true]);} );
-recorder.bind('stop', function() {setButtonState(recorderButtonSelectors, [true, false, true]);} );
-recorder.bind('reset', function() {setButtonState(recorderButtonSelectors, [true, false, false]);} );
+recorder.bind('start', function() {$('body').addClass('recording'); setButtonState(recorderButtonSelectors, [false, true, true]);} );
+recorder.bind('stop' , function() {$('body').removeClass('recording'); setButtonState(recorderButtonSelectors, [true, false, true]);} );
+recorder.bind('reset', function() {$('body').removeClass('recording'); setButtonState(recorderButtonSelectors, [true, false, false]);} );
 recorder.reset();
 player = new Player(recordHandler, recorder.entries);
 player.bind('start', function() {$('body').addClass('playing'); setButtonState(playerButtonSelectors, [false, true, true]);} );
-player.bind('stop',  function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, true]);} );
+player.bind('stop' , function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, true]);} );
 player.bind('reset', function() {$('body').removeClass('playing'); setButtonState(playerButtonSelectors, [true, false, false]);} );
 player.reset();
 
 
-function doVisual(visualName, fmx, fmy) {
+function doVisual(visualName, fmx, fmy, timeScale) {
+	if (!timeScale) {timeScale=1;}
 	var w = window.innerWidth, h = window.innerHeight;
 	var visual = visuals[visualName];
-	return visual(w*fmx, h*fmy, w, h);
+	return visual(w*fmx, h*fmy, w, h, timeScale);
 }
 
 function setEventHandler(visualName, eventName) {
@@ -237,7 +243,7 @@ keyAliases = {
 };
 
 function keystrokes(event) {
-	if ($('#exported:focus, select:focus').length>0) {return;}
+	if ($('textarea:focus, input:focus, select:focus').length>0) {return;}
 	var k = event.charCode;
 	s = String.fromCharCode(k);
 	var $e = $(keyAliases[s]);
@@ -245,7 +251,7 @@ function keystrokes(event) {
 		$e.parent().val($e.val());
 		$e.change();
 	}
-	else if ($e.attr('disabled')===undefined) {
+	else if ($e.attr('disabled') === undefined) {
 		$e.click();
 	}
 }
